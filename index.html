@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat avec Pseudo</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+    }
+    .section {
+      text-align: center;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+    }
+    button {
+      background: #3498DB;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      margin: 10px;
+    }
+    button:hover {
+      background: #2980B9;
+    }
+    #messages {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="section login">
+    <h2>Entrez votre pseudo</h2>
+    <input type="text" id="username" placeholder="Votre pseudo" style="width: 80%; padding: 10px; margin-bottom: 10px; border: 1px solid #3498DB; border-radius: 5px;">
+    <button onclick="joinChat()">Rejoindre le chat</button>
+  </div>
+
+  <div class="section chat" style="display: none;">
+    <h2>Chat</h2>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Écrivez un message..." style="width: 80%; padding: 10px; margin-top: 10px; border: 1px solid #3498DB; border-radius: 5px;">
+    <button onclick="sendMessage()">Envoyer</button>
+  </div>
+
+  <script>
+    let username = '';
+
+    // Vérifie si un pseudo est déjà stocké, sinon affiche la section de connexion
+    document.addEventListener('DOMContentLoaded', () => {
+      const storedUsername = localStorage.getItem('username');
+      if (storedUsername) {
+        username = storedUsername;
+        document.querySelector('.login').style.display = 'none';
+        document.querySelector('.chat').style.display = 'block';
+        loadMessages();
+      }
+    });
+
+    function joinChat() {
+      username = document.getElementById('username').value.trim();
+      if (username === '') {
+        alert('Veuillez entrer un pseudo valide.');
+        return;
+      }
+      localStorage.setItem('username', username); // Stocke le pseudo dans localStorage
+      document.querySelector('.login').style.display = 'none';
+      document.querySelector('.chat').style.display = 'block';
+      loadMessages();
+    }
+
+    function sendMessage() {
+      const message = document.getElementById('messageInput').value.trim();
+      if (message === '') return;
+
+      const messages = JSON.parse(localStorage.getItem('messages') || '[]');
+      messages.push({ user: username, text: message });
+      localStorage.setItem('messages', JSON.stringify(messages));
+
+      document.getElementById('messageInput').value = '';
+      loadMessages();
+    }
+
+    function loadMessages() {
+      const messages = JSON.parse(localStorage.getItem('messages') || '[]');
+      const messagesContainer = document.getElementById('messages');
+      messagesContainer.innerHTML = '';
+      messages.forEach(msg => {
+        messagesContainer.innerHTML += `<p><strong>${msg.user}:</strong> ${msg.text}</p>`;
+      });
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  </script>
+</body>
+</html>
