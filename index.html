@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="FR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat avec Pseudo</title>
+  <title>Discussion privé</title>
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -42,6 +42,9 @@
       margin-bottom: 10px;
       border: 1px solid #ddd;
     }
+    input[type="file"] {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -55,13 +58,14 @@
     <h2>Chat</h2>
     <div id="messages"></div>
     <input type="text" id="messageInput" placeholder="Écrivez un message..." style="width: 80%; padding: 10px; margin-top: 10px; border: 1px solid #3498DB; border-radius: 5px;">
+    <input type="file" id="fileInput">
     <button onclick="sendMessage()">Envoyer</button>
   </div>
 
   <script>
     let username = '';
 
-    // Vérifie si un pseudo est déjà stocké, sinon affiche la section de connexion
+    // Vérifie si un pseudo est déjà stocké
     document.addEventListener('DOMContentLoaded', () => {
       const storedUsername = localStorage.getItem('username');
       if (storedUsername) {
@@ -72,39 +76,64 @@
       }
     });
 
+    // Fonction pour rejoindre le chat
     function joinChat() {
       username = document.getElementById('username').value.trim();
       if (username === '') {
         alert('Veuillez entrer un pseudo valide.');
         return;
       }
-      localStorage.setItem('username', username); // Stocke le pseudo dans localStorage
+      localStorage.setItem('username', username);
       document.querySelector('.login').style.display = 'none';
       document.querySelector('.chat').style.display = 'block';
       loadMessages();
     }
 
+    // Fonction pour envoyer un message ou un fichier
     function sendMessage() {
-      const message = document.getElementById('messageInput').value.trim();
-      if (message === '') return;
-
+      const messageInput = document.getElementById('messageInput');
+      const fileInput = document.getElementById('fileInput');
       const messages = JSON.parse(localStorage.getItem('messages') || '[]');
-      messages.push({ user: username, text: message });
-      localStorage.setItem('messages', JSON.stringify(messages));
 
-      document.getElementById('messageInput').value = '';
+      // Si un message texte est présent
+      if (messageInput.value.trim() !== '') {
+        messages.push({ user: username, text: messageInput.value.trim(), type: 'text' });
+        messageInput.value = ''; // Réinitialise le champ de saisie
+      }
+
+      // Si un fichier est sélectionné
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const fileUrl = URL.createObjectURL(file);
+        messages.push({ user: username, text: file.name, fileUrl, type: 'file' });
+        fileInput.value = ''; // Réinitialise le champ des fichiers
+      }
+
+      localStorage.setItem('messages', JSON.stringify(messages));
       loadMessages();
     }
 
+    // Fonction pour charger les messages
     function loadMessages() {
       const messages = JSON.parse(localStorage.getItem('messages') || '[]');
       const messagesContainer = document.getElementById('messages');
       messagesContainer.innerHTML = '';
       messages.forEach(msg => {
-        messagesContainer.innerHTML += `<p><strong>${msg.user}:</strong> ${msg.text}</p>`;
+        if (msg.type === 'text') {
+          messagesContainer.innerHTML += `<p><strong>${msg.user}:</strong> ${msg.text}</p>`;
+        } else if (msg.type === 'file') {
+          messagesContainer.innerHTML += `<p><strong>${msg.user}:</strong> <a href="${msg.fileUrl}" target="_blank">${msg.text}</a></p>`;
+        }
       });
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
+
+    // Permet l'envoi de message avec la touche "Entrée"
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && document.activeElement === document.getElementById('messageInput')) {
+        sendMessage();
+      }
+    });
   </script>
 </body>
 </html>
